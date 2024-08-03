@@ -1,1 +1,1 @@
-Creating sort of git clone in rust to learn more about git and rust.
+Creating sort of git clone in rust to get better understanding of git and rust.
