@@ -3,41 +3,41 @@ struct Repository {
     _name: String,
     last_commit_id: i32,
     commits: Vec<Commit>,
-    _head: Branch,
+    head: Branch,
     branch: Branch,
     branches: Vec<Branch>,
 }
 
 #[derive(Debug, Clone)]
 struct Commit {
-    _id: i32,
-    _message: String,
+    id: i32,
+    message: String,
     _parent: Option<Box<Commit>>,
 }
 
 #[derive(Debug, Clone)]
 struct Branch {
-    _name: String,
-    _commit: Commit,
+    name: String,
+    commit: Commit,
 }
 
 impl Repository {
     fn add_commit(&mut self, id: i32, message: String) {
         let new_commit = Commit {
-            _id: id,
-            _message: message,
+            id,
+            message,
             _parent: None,
         };
 
         self.last_commit_id = id;
         self.commits.push(new_commit.clone());
 
-        self._head._commit = new_commit.clone();
-        self.branch._commit = new_commit.clone();
+        self.head.commit = new_commit.clone();
+        self.branch.commit = new_commit.clone();
 
         println!(
             "Commit created with id: {} and message: {}",
-            new_commit._id, new_commit._message
+            new_commit.id, new_commit.message
         );
     }
 
@@ -45,34 +45,34 @@ impl Repository {
         let commit = &self.commits[id];
         println!(
             "commit id: {} commit message: {}",
-            commit._id, commit._message
+            commit.id, commit.message
         );
 
         return commit;
     }
 
     fn log(&mut self) -> &Commit {
-        let commit = &self._head._commit;
+        let commit = &self.head.commit;
         println!("Running log {:?}", commit);
         return commit;
     }
 
     fn checkout(&mut self, name: String) {
         for i in 0..self.branches.len() {
-            if self.branches[i]._name == name {
+            if self.branches[i].name == name {
                 println!("Switching to existing branch: {}", name);
-                self._head = self.branches[i].clone();
+                self.head = self.branches[i].clone();
                 return;
             }
         }
 
         let new_branch = Branch {
-            _name: name.clone(),
-            _commit: self._head._commit.clone(),
+            name: name.clone(),
+            commit: self.head.commit.clone(),
         };
 
         self.branches.push(new_branch.clone());
-        self._head = new_branch.clone();
+        self.head = new_branch.clone();
         println!("Switching to new branch: {}", name.clone());
         return;
     }
@@ -80,21 +80,21 @@ impl Repository {
 
 fn init_git(name: String) -> Repository {
     let empty_commit = Commit {
-        _id: 0,
-        _message: "".to_string(),
+        id: 0,
+        message: "".to_string(),
         _parent: None,
     };
 
     let master = Branch {
-        _name: "master".to_string(),
-        _commit: empty_commit,
+        name: "master".to_string(),
+        commit: empty_commit,
     };
 
     return Repository {
         _name: name,
         last_commit_id: 0,
         commits: vec![],
-        _head: master.clone(),
+        head: master.clone(),
         branch: master.clone(),
         branches: vec![master],
     };
