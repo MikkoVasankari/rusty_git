@@ -3,7 +3,9 @@ struct Repository {
     _name: String,
     last_commit_id: i32,
     commits: Vec<Commit>,
-    head: Option<Commit>,
+    _head: Branch,
+    branch: Branch,
+    branches: Vec<Branch>,
 }
 
 #[derive(Debug, Clone)]
@@ -13,17 +15,25 @@ struct Commit {
     _parent: Option<Box<Commit>>,
 }
 
+#[derive(Debug, Clone)]
+struct Branch {
+    _name: String,
+    _commit: Commit,
+}
+
 impl Repository {
     fn add_commit(&mut self, id: i32, message: String) {
         let new_commit = Commit {
             _id: id,
             _message: message,
-            _parent: self.head.clone().map(Box::new),
+            _parent: None,
         };
 
         self.last_commit_id = id;
         self.commits.push(new_commit.clone());
-        self.head = Some(new_commit.clone());
+
+        self._head._commit = new_commit.clone();
+        self.branch._commit = new_commit.clone();
 
         println!(
             "Commit created with id: {} and message: {}",
@@ -31,7 +41,7 @@ impl Repository {
         );
     }
 
-    fn get_commit(&mut self, id: usize) -> &Commit {
+    fn _get_commit(&mut self, id: usize) -> &Commit {
         let commit = &self.commits[id];
         println!(
             "commit id: {} commit message: {}",
@@ -40,31 +50,69 @@ impl Repository {
 
         return commit;
     }
+
+    fn log(&mut self) -> &Commit {
+        let commit = &self._head._commit;
+        println!("Running log {:?}", commit);
+        return commit;
+    }
+
+    fn checkout(&mut self, name: String) {
+        for i in 0..self.branches.len() {
+            if self.branches[i]._name == name {
+                println!("Switching to existing branch: {}", name);
+                self._head = self.branches[i].clone();
+                return;
+            }
+        }
+
+        let new_branch = Branch {
+            _name: name.clone(),
+            _commit: self._head._commit.clone(),
+        };
+
+        self.branches.push(new_branch.clone());
+        self._head = new_branch.clone();
+        println!("Switching to new branch: {}", name.clone());
+        return;
+    }
 }
 
 fn init_git(name: String) -> Repository {
+    let empty_commit = Commit {
+        _id: 0,
+        _message: "".to_string(),
+        _parent: None,
+    };
+
+    let master = Branch {
+        _name: "master".to_string(),
+        _commit: empty_commit,
+    };
+
     return Repository {
         _name: name,
         last_commit_id: 0,
         commits: vec![],
-        head: None,
+        _head: master.clone(),
+        branch: master.clone(),
+        branches: vec![master],
     };
 }
 
 fn main() {
     let mut repo = init_git(String::from("jou"));
 
-    repo.add_commit(1, String::from("First Commit"));
+    repo.add_commit(0, String::from("First Commit"));
 
-    repo.add_commit(2, String::from("2nd Commit"));
-    repo.add_commit(3, String::from("Third"));
+    repo.add_commit(1, String::from("2nd Commit"));
+    repo.add_commit(2, String::from("Third"));
 
-    println!(
-        "{:?}",
-        repo.head.as_ref().unwrap()._parent.as_ref().unwrap()._id
-    );
+    repo.log();
 
-    println!("{:?}", repo.get_commit(2)._id)
+    repo.checkout("name".to_string());
+    repo.checkout("jou".to_string());
+    repo.checkout("name".to_string());
 }
 
 #[cfg(test)]
@@ -79,9 +127,6 @@ mod tests {
         // Test last commit and amount of commits match
         assert_eq!(git.last_commit_id, 1);
         assert_eq!(git.commits.len(), 1);
-        // Test current head
-        assert_eq!(git.head.as_ref().unwrap()._id, 1);
-        assert_eq!(git.head.as_ref().unwrap()._message, "Initial Commit");
 
         // Add new commit
         git.add_commit(2, String::from("Second commit"));
@@ -89,9 +134,5 @@ mod tests {
         // when new commit was added
         assert_eq!(git.last_commit_id, 2);
         assert_eq!(git.commits.len(), 2);
-
-        // Test current head
-        assert_eq!(git.head.as_ref().unwrap()._id, 2);
-        assert_eq!(git.head.as_ref().unwrap()._message, "Second commit");
     }
 }
